@@ -3,36 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#100617" />
+  <meta name="theme-color" content="#1c0618" />
   <title>Lucky Hands · Rock Paper Scissors</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Yeseva+One&family=Poppins:ital,wght@0,400;0,600;1,600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="app">
 
     <header class="topbar">
-      <div class="brand">Lucky <span>Hands</span></div>
-      <div class="scoreboard">
-        <div class="score you">
-          <span class="label">You</span>
-          <span class="num" id="scoreYou">0</span>
-        </div>
-        <div class="score ties">
-          <span class="label">Tie</span>
-          <span class="num" id="scoreTie">0</span>
-        </div>
-        <div class="score priya">
-          <span class="label">Priya</span>
-          <span class="num" id="scorePriya">0</span>
-        </div>
+      <div class="score you">
+        <span class="label">You</span>
+        <span class="num" id="scoreYou">0</span>
+      </div>
+      <div class="brand">Lucky Hands</div>
+      <div class="score priya">
+        <span class="label">Priya</span>
+        <span class="num" id="scorePriya">0</span>
       </div>
       <button class="icon-btn" id="muteBtn" aria-label="Toggle sound">🔊</button>
     </header>
 
-    <section class="stage">
+    <section class="stage" id="stage">
       <div class="arch">
         <img class="arch-poster" src="assets/priya_scene.jpg" alt="" draggable="false" />
         <video data-video="idle" src="assets/idle.mp4" muted playsinline loop preload="auto"></video>
@@ -41,41 +35,36 @@
         <video data-video="tie" src="assets/tie.mp4" muted playsinline preload="auto"></video>
         <div class="flare" id="flare"></div>
       </div>
-      <div class="name-tag">Priya <span class="dot">·</span> your hostess tonight</div>
       <div class="bubble" id="bubble">Your move, handsome~</div>
-    </section>
-
-    <section class="reveal" id="reveal">
-      <div class="hand-side">
-        <span class="who">Priya</span>
-        <div class="hand" id="handPriya">✊</div>
-      </div>
-      <div class="vs">VS</div>
-      <div class="hand-side">
-        <div class="hand" id="handYou">✊</div>
-        <span class="who">You</span>
+      <div class="chant" id="chant"></div>
+      <div class="result" id="result">
+        <div class="result-hands">
+          <div class="hand-side">
+            <div class="hand" id="handPriya">✊</div>
+            <span class="who">Priya</span>
+          </div>
+          <div class="vs">:</div>
+          <div class="hand-side">
+            <div class="hand" id="handYou">✊</div>
+            <span class="who">You</span>
+          </div>
+        </div>
+        <div class="result-title" id="resultTitle"></div>
+        <div class="result-sub" id="resultSub"></div>
       </div>
     </section>
 
     <section class="controls">
-      <button class="choice" data-choice="rock" aria-label="Choose Rock">
+      <button class="choice" data-choice="rock" aria-label="Rock">
         <span class="icon">✊</span>
-        <span class="label">Rock</span>
       </button>
-      <button class="choice" data-choice="paper" aria-label="Choose Paper">
+      <button class="choice" data-choice="paper" aria-label="Paper">
         <span class="icon">✋</span>
-        <span class="label">Paper</span>
       </button>
-      <button class="choice" data-choice="scissors" aria-label="Choose Scissors">
+      <button class="choice" data-choice="scissors" aria-label="Scissors">
         <span class="icon">✌️</span>
-        <span class="label">Scissors</span>
       </button>
     </section>
-
-    <div class="banner" id="banner">
-      <div class="banner-title" id="bannerTitle"></div>
-      <div class="banner-sub" id="bannerSub"></div>
-    </div>
 
     <div class="audio-hint" id="audioHint" hidden>🔊 Tap anywhere for the music</div>
 

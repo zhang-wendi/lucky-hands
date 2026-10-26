@@ -19,15 +19,15 @@
 
   const els = {
     you: document.getElementById('scoreYou'),
-    tie: document.getElementById('scoreTie'),
     priya: document.getElementById('scorePriya'),
+    stage: document.getElementById('stage'),
+    bubble: document.getElementById('bubble'),
+    chant: document.getElementById('chant'),
+    result: document.getElementById('result'),
+    resultTitle: document.getElementById('resultTitle'),
+    resultSub: document.getElementById('resultSub'),
     handYou: document.getElementById('handYou'),
     handPriya: document.getElementById('handPriya'),
-    bubble: document.getElementById('bubble'),
-    reveal: document.getElementById('reveal'),
-    banner: document.getElementById('banner'),
-    bannerTitle: document.getElementById('bannerTitle'),
-    bannerSub: document.getElementById('bannerSub'),
     buttons: Array.from(document.querySelectorAll('.choice')),
     flare: document.getElementById('flare'),
   };
@@ -35,6 +35,7 @@
   let state = 'idle'; // idle | shaking | result
   let score = loadScore();
   let priyaHistory = [];
+  let talkTimer = null;
 
   function loadScore() {
     try {
@@ -50,7 +51,6 @@
 
   function renderScore() {
     els.you.textContent = score.you;
-    els.tie.textContent = score.tie;
     els.priya.textContent = score.priya;
   }
 
@@ -74,8 +74,7 @@
     if (!next) return;
     if (flare) flashFlare();
 
-    const isReaction = name !== 'idle';
-    if (isReaction) next.currentTime = 0; // 反应视频每次从头播
+    if (name !== 'idle') next.currentTime = 0; // 反应视频每次从头播
 
     next.play().catch(() => {});
     next.classList.add('active');
@@ -100,13 +99,11 @@
     reactionTimer = setTimeout(() => showVideo('idle'), 4000);
   }
 
-  // 反应视频自然播完也回待机（timer 兜底）
   ['win', 'lose', 'tie'].forEach((n) => {
     videos[n].addEventListener('ended', () => {
       if (activeVideo === videos[n]) showVideo('idle');
     });
   });
-
 
   // Priya 出拳带一点"人味"：不会连续 3 次出同一个拳
   function priyaPick() {
@@ -128,9 +125,23 @@
     el.classList.add(cls);
   }
 
+  // 她开口说话时，立绘轻微呼吸浮动
+  function talk() {
+    els.stage.classList.add('talking');
+    clearTimeout(talkTimer);
+    talkTimer = setTimeout(() => els.stage.classList.remove('talking'), 2400);
+  }
+
   function say(text) {
-    els.bubble.textContent = text;
+    // 波浪号前加不换行空格，避免小屏折行时 "~" 单独掉到第二行
+    els.bubble.textContent = text.replace(/~/g, '\u00A0~');
     retrigger(els.bubble, 'pop');
+    talk();
+  }
+
+  function chant(text) {
+    els.chant.textContent = text;
+    retrigger(els.chant, 'show');
   }
 
   function setHand(el, choice) {
@@ -142,35 +153,37 @@
     els.buttons.forEach((b) => (b.disabled = !enabled));
   }
 
-  function showBanner(kind, title, sub) {
-    els.bannerTitle.textContent = title;
-    els.bannerSub.textContent = sub;
-    els.banner.className = 'banner ' + kind;
-    void els.banner.offsetWidth;
-    els.banner.classList.add('show');
-    setTimeout(() => els.banner.classList.remove('show'), 1600);
+  function showResult(kind, title, sub) {
+    els.resultTitle.textContent = title;
+    els.resultSub.textContent = sub;
+    els.result.className = 'result ' + kind;
+    void els.result.offsetWidth;
+    els.result.classList.add('show');
+  }
+
+  function hideResult() {
+    els.result.classList.remove('show');
   }
 
   function play(playerChoice) {
     if (state !== 'idle') return;
     state = 'shaking';
     setButtons(false);
-    els.banner.classList.remove('show');
-    els.handYou.textContent = EMOJI.rock;
-    els.handPriya.textContent = EMOJI.rock;
-    els.reveal.classList.add('shaking');
+    hideResult();
+    els.bubble.classList.add('hide');
 
     AudioFX.playVoice('countdown');
-    CHANTS.forEach((chant, i) =>
+    CHANTS.forEach((word, i) =>
       setTimeout(() => {
-        say(chant);
+        chant(word);
         AudioFX.tick();
       }, i * 450));
+
     setTimeout(() => resolve(playerChoice), CHANTS.length * 450 + 150);
   }
 
   function resolve(playerChoice) {
-    els.reveal.classList.remove('shaking');
+    els.chant.classList.remove('show');
 
     // 亮拳音效：挥动 + 烛光闪 + 弹出
     AudioFX.whoosh();
@@ -186,7 +199,7 @@
     else if (BEATS[playerChoice] === priyaChoice) outcome = 'win';
     else outcome = 'lose';
 
-    const TITLES = { win: 'You Win! 🎉', lose: 'Priya Wins! 💋', tie: "It's a Tie! 😏" };
+    const TITLES = { win: 'You Win!', lose: 'Priya Wins!', tie: 'Tie!' };
     const SUBS = { win: WIN_SUBS, lose: LOSE_SUBS, tie: TIE_SUBS };
     const STINGS = { win: AudioFX.stingWin, lose: AudioFX.stingLose, tie: AudioFX.stingTie };
     const SCORE_KEY = { win: 'you', lose: 'priya', tie: 'tie' };
@@ -194,10 +207,12 @@
     score[SCORE_KEY[outcome]]++;
     const idx = Math.floor(Math.random() * SUBS[outcome].length);
     const line = SUBS[outcome][idx];
-    showBanner(outcome, TITLES[outcome], line);
-    react(outcome);
 
-    // 结果音效 + 语音台词（横幅弹出后依次进场；语音文件与气泡文本一一对应）
+    showResult(outcome, TITLES[outcome], line);
+    react(outcome);
+    talk();
+
+    // 结果音效 + 语音台词（语音文件与文本一一对应）
     setTimeout(() => STINGS[outcome](), 320);
     setTimeout(() => AudioFX.playVoice(outcome + (idx + 1)), 560);
 
@@ -206,10 +221,12 @@
     state = 'result';
 
     setTimeout(() => {
-      say(pick(IDLE_LINES));
+      hideResult();
       setButtons(true);
       state = 'idle';
-    }, 1900);
+      els.bubble.classList.remove('hide');
+      setTimeout(() => say(pick(IDLE_LINES)), 200);
+    }, 2200);
   }
 
   let lastAction = Date.now();
